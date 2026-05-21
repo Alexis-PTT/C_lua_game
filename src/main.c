@@ -306,5 +306,6 @@ void app_main(void) {
     initLCD(&c);
     testProg(&c);
 
+
 }
 
