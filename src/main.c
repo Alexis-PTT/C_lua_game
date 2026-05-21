@@ -305,5 +305,6 @@ void app_main(void) {
     initI2C(&c);
     initLCD(&c);
     testProg(&c);
+
 }
 
