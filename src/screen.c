@@ -63,15 +63,15 @@ void initLCD(I2C_screen *s){
     // Create the panel handle from the sh1106 driver
     s->panel_handle = NULL;
     ESP_ERROR_CHECK(esp_lcd_new_panel_sh1106(s->io_handle, &s->panel_config, &s->panel_handle));
-
-    // Reset the screen (no reset pin, so it's a no-op here, optional)
+    // Reset the screen
     ESP_ERROR_CHECK(esp_lcd_panel_reset(s->panel_handle));
-
-    // Initialize the screen (this one isn't optional at all!)
+    // Initialize the screen
     ESP_ERROR_CHECK(esp_lcd_panel_init(s->panel_handle));
-
-    // Turn on the screen (Easier to see something, right?)
+    // Turn on the screen
     ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(s->panel_handle, true));
+
+    //memory space of the buffer of the screen
+    memset(s->lcd_panel_buffer, 0, SH1106_BUFFER_SIZE);
 }
 void clear() {
 
@@ -79,7 +79,21 @@ void clear() {
 void drawStr(char *s) {
 
 }
-void drawLine(int x1, int y1, int x2, int y2) {
+void drawLine(int x1, int y1, int x2, int y2,I2C_screen s) {
+    int a = (x1 - x2);
+    if (a == 0) {
+        a=x1;
+    }else {
+        a = (y1 - y2) / a;
+        int b = y1 - (x1 * a);
+        for (int i = x1; i < x2 + 1; ++i) {
+            s.lcd_panel_buffer[a * i + b] |= (1ULL << i);
+        }
+    }
+}
+
+
+void clearRect(int x, int y, int w, int h) {
 
 }
 void drawRect(int x, int y, int w, int h) {
@@ -89,18 +103,9 @@ void drawImage(int x, int y, int w, int h) {
 
 }
 void testProg(I2C_screen *s) {
-    /* SCREEN PIXEL TEST */
-
-    // Create a buffer to hold the screen data
-    uint8_t buffer_data[SH1106_BUFFER_SIZE];
-    memset(buffer_data, 0, SH1106_BUFFER_SIZE);
-
-    // Just turn on the first top-left pixel and the last bottom-right pixel to show individual pixels control
-    // NOTE : Refer to driver README.md file for more information about the screen buffer format
-    buffer_data[0] = 0b00000001;
-    buffer_data[SH1106_BUFFER_SIZE - 1] = 0b10000000;
-
+    s->lcd_panel_buffer[0] = 0b11111111;
+    s->lcd_panel_buffer[SH1106_BUFFER_SIZE - 1] = 0b11111111;
     // Send the buffer to the screen
-    ESP_ERROR_CHECK(esp_lcd_panel_draw_bitmap(s->panel_handle, 0, 0, SH1106_WIDTH, SH1106_HEIGHT, buffer_data));
+    ESP_ERROR_CHECK(esp_lcd_panel_draw_bitmap(s->panel_handle, 0, 0, SH1106_WIDTH, SH1106_HEIGHT, s->lcd_panel_buffer));
     vTaskDelay(pdMS_TO_TICKS(2000)); // wait a bit
 }
