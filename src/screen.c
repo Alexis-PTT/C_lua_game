@@ -89,6 +89,7 @@ void drawLine(int x1, int y1, int x2, int y2,I2C_screen s) {
         for (int i = x1; i < x2 + 1; ++i) {
             s.lcd_panel_buffer[a * i + b] |= (1ULL << i);
         }
+
     }
 }
 
